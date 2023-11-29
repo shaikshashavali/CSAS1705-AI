@@ -1,89 +1,48 @@
-import heapq
+from queue import PriorityQueue
 
-class AStarNode:
-    def __init__(self, state, parent=None, g=0, h=0):
-        self.state = state
-        self.parent = parent
-        self.g = g  # Cost from start node to current node
-        self.h = h  # Heuristic estimate from current node to goal node
+def astar(graph, start, goal, heuristic):
+    open_set = PriorityQueue()
+    open_set.put((0, start))  
+    came_from = {}
+    g_score = {node: float("inf") for node in graph}
+    g_score[start] = 0
+    
+    while not open_set.empty():
+        current_node = open_set.get()[1]
+        
+        if current_node == goal:
+            path = []
+            while current_node in came_from:
+                path.append(current_node)
+                current_node = came_from[current_node]
+            return path[::-1]
+        
+        for neighbor in graph[current_node]:
+            tentative_g_score = g_score[current_node] + graph[current_node][neighbor]
+            
+            if tentative_g_score < g_score[neighbor]:
+                came_from[neighbor] = current_node
+                g_score[neighbor] = tentative_g_score
+                f_score = tentative_g_score + heuristic[neighbor]
+                open_set.put((f_score, neighbor))
+    
+    return None 
 
-    def __lt__(self, other):
-        # Comparison method for priority queue
-        return (self.g + self.h) < (other.g + other.h)
+graph = {
+    'A': {'B': 5, 'C': 8},
+    'B': {'D': 9},
+    'C': {'D': 6},
+    'D': {}
+}
 
-class AStarAlgorithm:
-    def __init__(self, start, goal, grid, heuristic):
-        self.start = start
-        self.goal = goal
-        self.grid = grid
-        self.heuristic = heuristic
+heuristic = {'A': 10, 'B': 7, 'C': 5, 'D': 0}
 
-    def is_valid_move(self, row, col):
-        return 0 <= row < len(self.grid) and 0 <= col < len(self.grid[0]) and self.grid[row][col] != '#'
+start_node = 'A'
+goal_node = 'D'
 
-    def get_neighbors(self, node):
-        row, col = node.state
-        neighbors = [(row + 1, col), (row - 1, col), (row, col + 1), (row, col - 1)]
-        return [(r, c) for r, c in neighbors if self.is_valid_move(r, c)]
+result = astar(graph, start_node, goal_node, heuristic)
 
-    def calculate_heuristic(self, state):
-        return self.heuristic(state, self.goal)
-
-    def a_star_search(self):
-        start_node = AStarNode(self.start, g=0, h=self.calculate_heuristic(self.start))
-        open_set = [start_node]
-        closed_set = set()
-
-        while open_set:
-            current_node = heapq.heappop(open_set)
-
-            if current_node.state == self.goal:
-                path = self.construct_path(current_node)
-                return path
-
-            closed_set.add(current_node.state)
-
-            for neighbor_state in self.get_neighbors(current_node):
-                if neighbor_state in closed_set:
-                    continue
-
-                neighbor_g = current_node.g + 1
-                neighbor_h = self.calculate_heuristic(neighbor_state)
-                neighbor_node = AStarNode(neighbor_state, parent=current_node, g=neighbor_g, h=neighbor_h)
-
-                if neighbor_node not in open_set:
-                    heapq.heappush(open_set, neighbor_node)
-
-        return None  # No path found
-
-    def construct_path(self, node):
-        path = []
-        while node:
-            path.insert(0, node.state)
-            node = node.parent
-        return path
-
-def manhattan_distance(state1, state2):
-    return abs(state1[0] - state2[0]) + abs(state1[1] - state2[1])
-
-if __name__ == "__main__":
-    # Example usage
-    start_state = (0, 0)
-    goal_state = (4, 4)
-    obstacle_grid = [
-        ['.', '.', '.', '.', '.'],
-        ['.', '#', '.', '#', '.'],
-        ['.', '#', '.', '#', '.'],
-        ['.', '.', '.', '.', '.'],
-        ['.', '.', '.', '.', '.']
-    ]
-
-    a_star = AStarAlgorithm(start_state, goal_state, obstacle_grid, heuristic=manhattan_distance)
-    path = a_star.a_star_search()
-
-    if path:
-        print("Path found:")
-        for row, col in path:
-            print(f"({row}, {col})")
-    else:
-        print("No path found.")
+if result:
+    print(f"Shortest path from {start_node} to {goal_node}: {result}")
+else:
+    print("No path found.")
