@@ -1,0 +1,29 @@
+% Facts representing relationships
+teaches(teacher1, math, m101).
+teaches(teacher2, physics, p102).
+teaches(teacher3, literature, l103).
+
+enrolls(student1, math, m101).
+enrolls(student1, physics, p102).
+enrolls(student2, literature, l103).
+enrolls(student3, math, m101).
+
+% Queries to retrieve information
+students_of_subject(Subject, Students) :-
+    findall(Student, enrolls(Student, Subject, _), Students).
+
+teacher_of_subject(Subject, Teacher) :-
+    teaches(Teacher, Subject, _).
+
+subject_code_of_subject(Subject, SubjectCode) :-
+    teaches(_, Subject, SubjectCode).
+
+% Example queries:
+% To find students of a subject:
+% ?- students_of_subject(math, Students).
+%
+% To find the teacher of a subject:
+% ?- teacher_of_subject(physics, Teacher).
+%
+% To find the subject code of a subject:
+% ?- subject_code_of_subject(literature, SubjectCode).
