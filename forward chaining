@@ -1,0 +1,29 @@
+% Initial facts
+has_fur(dog).
+has_tail(dog).
+has_fur(cat).
+has_tail(cat).
+has_feathers(bird).
+
+% Rules for forward chaining
+mammal(X) :- has_fur(X), has_tail(X).
+animal(X) :- has_fur(X).
+animal(X) :- has_feathers(X).
+
+% Forward chaining predicate
+forward_chain :-
+    findall(X, (animal(X), \+ fact(animal(X))), NewAnimals),
+    process_new_animals(NewAnimals),
+    !, forward_chain.  % Recursive call for additional chaining
+
+% Process newly derived animals
+process_new_animals([]).
+process_new_animals([Animal|Rest]) :-
+    assertz(fact(animal(Animal))),
+    write('New animal derived: '), writeln(Animal),
+    process_new_animals(Rest).
+
+% Example queries
+?- forward_chain.
+?- has_fur(dog).  % Check if new facts are derived
+?- has_fur(bird).
